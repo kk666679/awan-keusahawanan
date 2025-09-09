@@ -1,0 +1,253 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core Multi-Tenancy Models
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users       UserOnWorkspace[]
+  customers   Customer[]
+  products    Product[]
+  invoices    Invoice[]
+  tasks       Task[]
+  computeJobs ComputeJob[]
+
+  @@map("workspaces")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  workspaces     UserOnWorkspace[]
+  assignedTasks  Task[]
+  createdInvoices Invoice[]
+  computeJobs    ComputeJob[]
+
+  @@map("users")
+}
+
+model UserOnWorkspace {
+  id          String        @id @default(cuid())
+  userId      String
+  workspaceId String
+  role        WorkspaceRole @default(MEMBER)
+  joinedAt    DateTime      @default(now())
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+  @@map("user_on_workspace")
+}
+
+// Business SaaS Models
+model Customer {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  email       String?
+  phone       String?
+  company     String?
+  address     String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invoices  Invoice[]
+
+  @@map("customers")
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  workspaceId String
+  name        String
+  description String?
+  sku         String?
+  price       Decimal  @db.Decimal(10, 2)
+  cost        Decimal? @db.Decimal(10, 2)
+  stock       Int      @default(0)
+  lowStock    Int      @default(10)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invoiceItems InvoiceItem[]
+
+  @@map("products")
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  workspaceId String
+  customerId  String
+  createdById String
+  number      String
+  status      InvoiceStatus @default(DRAFT)
+  issueDate   DateTime      @default(now())
+  dueDate     DateTime?
+  subtotal    Decimal       @db.Decimal(10, 2)
+  tax         Decimal       @default(0) @db.Decimal(10, 2)
+  total       Decimal       @db.Decimal(10, 2)
+  notes       String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  // Relations
+  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  customer  Customer      @relation(fields: [customerId], references: [id])
+  createdBy User          @relation(fields: [createdById], references: [id])
+  items     InvoiceItem[]
+
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  productId   String?
+  description String
+  quantity    Int
+  price       Decimal @db.Decimal(10, 2)
+  total       Decimal @db.Decimal(10, 2)
+
+  // Relations
+  invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id])
+
+  @@map("invoice_items")
+}
+
+model Task {
+  id          String     @id @default(cuid())
+  workspaceId String
+  assigneeId  String?
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  dueDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  assignee  User?     @relation(fields: [assigneeId], references: [id])
+
+  @@map("tasks")
+}
+
+// Cloud Compute Platform Models
+model ComputeJob {
+  id          String           @id @default(cuid())
+  workspaceId String
+  userId      String
+  jobType     ComputeJobType
+  command     String
+  parameters  Json?
+  status      ComputeJobStatus @default(QUEUED)
+  priority    Priority         @default(MEDIUM)
+  
+  // Resource allocation
+  cpuCores    Int?
+  memoryGb    Int?
+  gpuType     String?
+  gpuCount    Int?
+  
+  // Timing and billing
+  queuedAt    DateTime         @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  duration    Int?             // seconds
+  cost        Decimal?         @db.Decimal(10, 4)
+  
+  // Results
+  outputUrl   String?
+  errorLog    String?
+  
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@map("compute_jobs")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  OVERDUE
+  CANCELLED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ComputeJobType {
+  CPU_PROCESSING
+  GPU_TRAINING
+  GPU_INFERENCE
+  VIDEO_RENDER
+  DATA_ANALYSIS
+  CUSTOM
+}
+
+enum ComputeJobStatus {
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
