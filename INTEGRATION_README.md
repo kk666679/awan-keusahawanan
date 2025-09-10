@@ -13,15 +13,13 @@ This document outlines the integration architecture between Awan Keusahawanan an
 
 ## Architecture Overview
 
-```
-┌─────────────────────┐    ┌──────────────────┐    ┌─────────────────────┐
-│  Awan Keusahawanan │◄──►│  Integration Hub │◄──►│  Commerce Cloud     │
-│                     │    │                  │    │                     │
-│  - Product Catalog  │    │  - API Gateway   │    │  - Storefront       │
-│  - Order Management │    │  - Data Sync     │    │  - Order Processing │
-│  - Customer Data    │    │  - Event Bus     │    │  - Payment Gateway  │
-│  - Inventory        │    │  - Monitoring    │    │  - Analytics        │
-└─────────────────────┘    └──────────────────┘    └─────────────────────┘
+```mermaid
+flowchart LR
+    Awan["Awan Keusahawanan\n- Product Catalog\n- Order Management\n- Customer Data\n- Inventory"]
+    Hub["Integration Hub\n- API Gateway\n- Data Sync\n- Event Bus\n- Monitoring"]
+    Cloud["Commerce Cloud\n- Storefront\n- Order Processing\n- Payment Gateway\n- Analytics"]
+
+    Awan <--> Hub <--> Cloud
 ```
 
 ## Authentication & Security
