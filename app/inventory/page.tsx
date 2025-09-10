@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DashboardLayout } from "@/components/dashboard-layout"
+import { safeJsonParse } from "@/lib/api"
 import {
   Plus,
   Search,
@@ -62,8 +63,8 @@ export default function InventoryPage() {
         throw new Error("Failed to fetch products")
       }
 
-      const data = await response.json()
-      setProducts(data.products)
+      const data = await safeJsonParse(response)
+      setProducts(data?.products || [])
     } catch (error) {
       console.error("Error fetching products:", error)
     } finally {

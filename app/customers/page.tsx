@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DashboardLayout } from "@/components/dashboard-layout"
+import { safeJsonParse } from "@/lib/api"
 import { Plus, Search, MoreHorizontal, Building, Mail, Phone, Edit, Trash2 } from "lucide-react"
 
 interface Customer {
@@ -55,8 +56,8 @@ export default function CustomersPage() {
         throw new Error("Failed to fetch customers")
       }
 
-      const data = await response.json()
-      setCustomers(data.customers)
+      const data = await safeJsonParse(response)
+      setCustomers(data?.customers || [])
     } catch (error) {
       console.error("Error fetching customers:", error)
     } finally {

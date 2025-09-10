@@ -2,30 +2,46 @@ import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { hashPassword, generateToken } from "@/lib/auth"
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const SLUG_REGEX = /^[a-z0-9-]+$/
+
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password, workspaceName, workspaceSlug } = await request.json()
+    const body = await request.json()
+    const { name, email, password, workspaceName, workspaceSlug } = body
 
-    if (!name || !email || !password || !workspaceName || !workspaceSlug) {
+    // Validate required fields
+    if (!name?.trim() || !email?.trim() || !password || !workspaceName?.trim() || !workspaceSlug?.trim()) {
       return NextResponse.json({ error: "Semua medan diperlukan" }, { status: 400 })
     }
 
-    // Check if user already exists
-    const existingUser = await prisma.user.findUnique({
-      where: { email },
-    })
-
-    if (existingUser) {
-      return NextResponse.json({ error: "Pengguna dengan emel ini sudah wujud" }, { status: 400 })
+    // Validate email format
+    if (!EMAIL_REGEX.test(email)) {
+      return NextResponse.json({ error: "Format emel tidak sah" }, { status: 400 })
     }
 
-    // Check if workspace slug is taken
-    const existingWorkspace = await prisma.workspace.findUnique({
-      where: { slug: workspaceSlug },
-    })
+    // Validate password strength
+    if (password.length < 8) {
+      return NextResponse.json({ error: "Kata laluan mestilah sekurang-kurangnya 8 aksara" }, { status: 400 })
+    }
+
+    // Validate workspace slug format
+    if (!SLUG_REGEX.test(workspaceSlug) || workspaceSlug.length < 3) {
+      return NextResponse.json({ error: "URL workspace tidak sah (gunakan huruf kecil, nombor, dan tanda sempang sahaja)" }, { status: 400 })
+    }
+
+    // Check for existing user and workspace in parallel
+    const [existingUser, existingWorkspace] = await Promise.all([
+      prisma.user.findUnique({ where: { email: email.toLowerCase() } }),
+      prisma.workspace.findUnique({ where: { slug: workspaceSlug.toLowerCase() } })
+    ])
+
+    if (existingUser) {
+      return NextResponse.json({ error: "Pengguna dengan emel ini sudah wujud" }, { status: 409 })
+    }
 
     if (existingWorkspace) {
-      return NextResponse.json({ error: "URL workspace sudah digunakan" }, { status: 400 })
+      return NextResponse.json({ error: "URL workspace sudah digunakan" }, { status: 409 })
     }
 
     // Hash password
@@ -36,8 +52,8 @@ export async function POST(request: NextRequest) {
       // Create user
       const user = await tx.user.create({
         data: {
-          name,
-          email,
+          name: name.trim(),
+          email: email.toLowerCase().trim(),
           password: hashedPassword,
           role: "USER",
         },
@@ -46,9 +62,9 @@ export async function POST(request: NextRequest) {
       // Create workspace
       const workspace = await tx.workspace.create({
         data: {
-          name: workspaceName,
-          slug: workspaceSlug,
-          description: `Workspace untuk ${workspaceName}`,
+          name: workspaceName.trim(),
+          slug: workspaceSlug.toLowerCase().trim(),
+          description: `Workspace untuk ${workspaceName.trim()}`,
         },
       })
 
@@ -62,6 +78,8 @@ export async function POST(request: NextRequest) {
       })
 
       return { user, workspace }
+    }, {
+      timeout: 10000, // 10 second timeout
     })
 
     // Generate token
@@ -72,6 +90,7 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({
+      success: true,
       token,
       user: {
         id: result.user.id,
@@ -83,9 +102,26 @@ export async function POST(request: NextRequest) {
         name: result.workspace.name,
         slug: result.workspace.slug,
       },
-    })
+    }, { status: 201 })
   } catch (error) {
     console.error("Registration error:", error)
+    
+    // Handle specific Prisma errors
+    if (error?.code === 'P2002') {
+      const target = error?.meta?.target
+      if (target?.includes('email')) {
+        return NextResponse.json({ error: "Emel sudah digunakan" }, { status: 409 })
+      }
+      if (target?.includes('slug')) {
+        return NextResponse.json({ error: "URL workspace sudah digunakan" }, { status: 409 })
+      }
+    }
+    
+    // Handle JSON parsing errors
+    if (error instanceof SyntaxError) {
+      return NextResponse.json({ error: "Data tidak sah" }, { status: 400 })
+    }
+    
     return NextResponse.json({ error: "Ralat dalaman pelayan" }, { status: 500 })
   }
 }

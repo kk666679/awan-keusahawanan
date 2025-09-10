@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -58,15 +58,27 @@ export default function RegisterPage() {
         body: JSON.stringify(formData),
       })
 
-      const data = await response.json()
+      // Check if response has content before parsing JSON
+      const text = await response.text()
+      let data
+      
+      try {
+        data = text ? JSON.parse(text) : {}
+      } catch (parseError) {
+        throw new Error("Invalid server response")
+      }
 
       if (!response.ok) {
         throw new Error(data.error || "Registration failed")
       }
 
       // Store token and redirect
-      localStorage.setItem("token", data.token)
-      router.push("/dashboard")
+      if (data.token) {
+        localStorage.setItem("token", data.token)
+        router.push("/dashboard")
+      } else {
+        throw new Error("No token received")
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed")
     } finally {

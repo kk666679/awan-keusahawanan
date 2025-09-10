@@ -1,0 +1,44 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "inventory": "Inventory",
+    "customers": "Customers",
+    "workspace": "Workspace",
+    "login": "Login",
+    "register": "Register"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "name": "Name",
+    "loginTitle": "Login to your account",
+    "registerTitle": "Create new account",
+    "loginButton": "Sign In",
+    "registerButton": "Sign Up"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "totalRevenue": "Total Revenue",
+    "totalOrders": "Total Orders",
+    "totalCustomers": "Total Customers"
+  },
+  "currency": {
+    "format": "${amount}"
+  },
+  "date": {
+    "format": "MM/dd/yyyy"
+  }
+}

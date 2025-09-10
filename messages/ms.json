@@ -1,0 +1,44 @@
+{
+  "nav": {
+    "dashboard": "Papan Pemuka",
+    "inventory": "Inventori",
+    "customers": "Pelanggan",
+    "workspace": "Ruang Kerja",
+    "login": "Log Masuk",
+    "register": "Daftar"
+  },
+  "common": {
+    "save": "Simpan",
+    "cancel": "Batal",
+    "delete": "Padam",
+    "edit": "Edit",
+    "add": "Tambah",
+    "search": "Cari",
+    "loading": "Memuatkan...",
+    "error": "Ralat",
+    "success": "Berjaya"
+  },
+  "auth": {
+    "email": "E-mel",
+    "password": "Kata Laluan",
+    "confirmPassword": "Sahkan Kata Laluan",
+    "name": "Nama",
+    "loginTitle": "Log masuk ke akaun anda",
+    "registerTitle": "Cipta akaun baharu",
+    "loginButton": "Log Masuk",
+    "registerButton": "Daftar"
+  },
+  "dashboard": {
+    "title": "Papan Pemuka",
+    "welcome": "Selamat kembali",
+    "totalRevenue": "Jumlah Hasil",
+    "totalOrders": "Jumlah Pesanan",
+    "totalCustomers": "Jumlah Pelanggan"
+  },
+  "currency": {
+    "format": "RM {amount}"
+  },
+  "date": {
+    "format": "dd/MM/yyyy"
+  }
+}

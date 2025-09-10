@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { safeJsonParse } from "@/lib/api"
 import { Cloud, Loader2 } from "lucide-react"
 
 export default function LoginPage() {
@@ -31,10 +32,10 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       })
 
-      const data = await response.json()
+      const data = await safeJsonParse(response)
 
       if (!response.ok) {
-        throw new Error(data.error || "Login failed")
+        throw new Error(data?.error || "Login failed")
       }
 
       // Store token in localStorage
