@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Plus, Search, MoreHorizontal, Building, Mail, Phone, Edit, Trash2 } from "lucide-react"
 
@@ -30,6 +31,8 @@ export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -61,20 +64,25 @@ export default function CustomersPage() {
     }
   }
 
-  const deleteCustomer = async (customerId: string) => {
-    if (!confirm("Adakah anda pasti ingin memadam pelanggan ini?")) {
-      return
-    }
+  const openDeleteDialog = (customer: Customer) => {
+    setCustomerToDelete(customer)
+    setDeleteDialogOpen(true)
+  }
+
+  const confirmDeleteCustomer = async () => {
+    if (!customerToDelete) return
 
     try {
       const token = localStorage.getItem("token")
-      const response = await fetch(`/api/customers/${customerId}`, {
+      const response = await fetch(`/api/customers/${customerToDelete.id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       })
 
       if (response.ok) {
-        setCustomers(customers.filter((c) => c.id !== customerId))
+        setCustomers(customers.filter((c) => c.id !== customerToDelete.id))
+        setDeleteDialogOpen(false)
+        setCustomerToDelete(null)
       }
     } catch (error) {
       console.error("Error deleting customer:", error)
@@ -213,7 +221,7 @@ export default function CustomersPage() {
                                   Edit
                                 </Link>
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => deleteCustomer(customer.id)} className="text-red-600">
+                              <DropdownMenuItem onClick={() => openDeleteDialog(customer)} className="text-red-600">
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Padam
                               </DropdownMenuItem>
@@ -234,6 +242,28 @@ export default function CustomersPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Padam Pelanggan</DialogTitle>
+              <DialogDescription>
+                Adakah anda pasti ingin memadam pelanggan{" "}
+                <strong>{customerToDelete?.name}</strong>? Tindakan ini tidak boleh
+                dibatalkan.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+                Batal
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteCustomer}>
+                Padam
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   )

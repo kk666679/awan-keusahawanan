@@ -1,0 +1,51 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: app_logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: multi-cloud-app
+          __path__: /var/log/app/*.log
+    pipeline_stages:
+      - match:
+          selector: '{job="multi-cloud-app"}'
+          stages:
+            - json:
+                expressions:
+                  level: level
+                  message: message
+                  timestamp: timestamp
+                  category: category
+            - labels:
+                level:
+                category:
+            - timestamp:
+                source: timestamp
+                format: RFC3339
+
+  - job_name: system_logs
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: system
+          __path__: /var/log/*.log
+    pipeline_stages:
+      - match:
+          selector: '{job="system"}'
+          stages:
+            - regex:
+                expression: '^(?P<timestamp>\w+\s+\d+\s+\d+:\d+:\d+)\s+(?P<hostname>\w+)\s+(?P<process>\w+)\[(?P<pid>\d+)\]:\s+(?P<message>.+)$'
+            - timestamp:
+                source: timestamp
+                format: 'Jan 2 15:04:05'

@@ -173,24 +173,24 @@ model ComputeJob {
   parameters  Json?
   status      ComputeJobStatus @default(QUEUED)
   priority    Priority         @default(MEDIUM)
-  
+
   // Resource allocation
   cpuCores    Int?
   memoryGb    Int?
   gpuType     String?
   gpuCount    Int?
-  
+
   // Timing and billing
   queuedAt    DateTime         @default(now())
   startedAt   DateTime?
   completedAt DateTime?
   duration    Int?             // seconds
   cost        Decimal?         @db.Decimal(10, 4)
-  
+
   // Results
   outputUrl   String?
   errorLog    String?
-  
+
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -199,6 +199,97 @@ model ComputeJob {
   user      User      @relation(fields: [userId], references: [id])
 
   @@map("compute_jobs")
+}
+
+// Monitoring and Alerting Models
+model Metric {
+  id          String    @id @default(cuid())
+  provider    String
+  resourceType String
+  resourceId  String
+  metricName  String
+  value       Float
+  unit        String
+  timestamp   DateTime
+  tags        Json      @default("{}")
+  createdAt   DateTime  @default(now())
+
+  @@map("metrics")
+}
+
+model Alert {
+  id               String    @id @default(cuid())
+  ruleId           String
+  ruleName         String
+  message          String
+  severity         String
+  status           String
+  createdAt        DateTime  @default(now())
+  resolvedAt       DateTime?
+  acknowledgedAt   DateTime?
+  acknowledgedBy   String?
+  metricData       Json
+  channels         Json      @default("[]")
+  updatedAt        DateTime  @updatedAt
+
+  @@map("alerts")
+}
+
+model AlertRule {
+  id             String   @id @default(cuid())
+  name           String
+  description    String?
+  metricName     String
+  condition      String
+  threshold      Float
+  duration       Int      // in minutes
+  severity       String
+  enabled        Boolean  @default(true)
+  channels       Json     @default("[]")
+  lastTriggered  DateTime?
+  cooldownPeriod Int      @default(10) // in minutes
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("alert_rules")
+}
+
+model Policy {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String
+  provider    String
+  conditions  Json
+  actions     Json
+  enabled     Boolean  @default(true)
+  priority    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?
+
+  @@map("policies")
+}
+
+model LogEntry {
+  id          String   @id @default(cuid())
+  timestamp   DateTime @default(now())
+  level       String
+  message     String
+  category    String
+  userId      String?
+  sessionId   String?
+  requestId   String?
+  provider    String?
+  operation   String?
+  resourceId  String?
+  duration    Int?
+  statusCode  Int?
+  error       Json?
+  metadata    Json?
+  tags        String[]
+
+  @@map("log_entries")
 }
 
 // Enums
