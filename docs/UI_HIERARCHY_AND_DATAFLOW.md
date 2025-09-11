@@ -2,6 +2,7 @@
 
 ## 1. Dashboard Page Component Hierarchy
 
+```
 DashboardPage
 ├── DashboardLayout
 │   ├── Sidebar (navigation, user menu)
@@ -16,7 +17,7 @@ DashboardPage
 │       └── Content Grid
 │           ├── Recent Activity Card (list of activities)
 │           └── Task Progress Card (progress bars)
-
+```
 ### Data Flow and Props
 - DashboardPage fetches data from APIs and manages state (stats, recentActivity, chartData).
 - Data passed as props to Card components for display.
@@ -25,6 +26,7 @@ DashboardPage
 
 ## 2. Customers Page Component Hierarchy
 
+```
 CustomersPage
 ├── DashboardLayout
 │   ├── Sidebar
@@ -41,6 +43,7 @@ CustomersPage
 │               │   │   ├── TableCell (customer info, links)
 │               │   │   └── DropdownMenu (row actions: edit, delete)
 │               │   └── Empty State Row
+```
 
 ### Data Flow and Props
 - CustomersPage fetches customers data and manages searchTerm state.
@@ -49,12 +52,14 @@ CustomersPage
 
 ## 3. Home Page Component Hierarchy
 
+```
 HomePage
 ├── Header (logo, login/register buttons)
 ├── Hero Section (Badge, title, description, action buttons)
 ├── Features Grid (6 Cards with icons and descriptions)
 ├── Pricing Section (3 Cards with pricing tiers)
 └── Footer (branding, links)
+```
 
 ### Data Flow and Props
 - Static content with no dynamic data fetching.
