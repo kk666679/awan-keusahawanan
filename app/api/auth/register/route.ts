@@ -1,6 +1,9 @@
+export const dynamic = 'force-dynamic'
+
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/db"
 import { hashPassword, generateToken } from "@/lib/auth"
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library"
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const SLUG_REGEX = /^[a-z0-9-]+$/
@@ -105,10 +108,10 @@ export async function POST(request: NextRequest) {
     }, { status: 201 })
   } catch (error) {
     console.error("Registration error:", error)
-    
+
     // Handle specific Prisma errors
-    if (error?.code === 'P2002') {
-      const target = error?.meta?.target
+    if (error instanceof PrismaClientKnownRequestError && error.code === 'P2002') {
+      const target = error.meta?.target as string[]
       if (target?.includes('email')) {
         return NextResponse.json({ error: "Emel sudah digunakan" }, { status: 409 })
       }

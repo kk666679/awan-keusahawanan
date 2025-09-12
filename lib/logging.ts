@@ -327,23 +327,6 @@ class Logger {
       );
     }
 
-    // Apply pagination
-    const offset = query.offset || 0;
-    const limit = query.limit || 100;
-    
-    return results.slice(offset, offset + limit);
-  }
-
-  // Force flush buffer (useful for testing or shutdown)
-  async flush(): Promise<void> {
-    await this.flushBuffer();
-  }
-}
-
-// Export singleton logger instance
-export const logger = new Logger();
-    }
-
     // Sort by timestamp descending
     results.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
@@ -352,6 +335,11 @@ export const logger = new Logger();
     const limit = query.limit || 100;
 
     return results.slice(offset, offset + limit);
+  }
+
+  // Force flush buffer (useful for testing or shutdown)
+  async flush(): Promise<void> {
+    await this.flushBuffer();
   }
 
   // Get log statistics
@@ -413,7 +401,7 @@ export const logger = new Logger();
   }
 }
 
-// Export singleton instance
+// Export singleton logger instance
 export const logger = new Logger();
 
 // Export as default

@@ -414,7 +414,10 @@ class MonitoringService {
           severity: alert.severity,
           status: alert.status,
           createdAt: alert.createdAt,
-          metricData: alert.metricData,
+          metricData: {
+            ...alert.metricData,
+            timestamp: alert.metricData.timestamp.toISOString(),
+          },
           channels: alert.channels,
         },
       });
@@ -662,6 +665,5 @@ class MonitoringService {
 // Export singleton instance
 export const monitoringService = new MonitoringService();
 
-// Export types
-export type { MetricData, AlertRule, Alert, MonitoringConfig };
+// Export default
 export default monitoringService;
